@@ -17,7 +17,7 @@ class Appointment(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     client_id = Column(Integer, ForeignKey("clients.id", ondelete="CASCADE"), nullable=False, index=True)
-    professional_id = Column(Integer, ForeignKey("professionals.id"), nullable=False, index=True)
+    professional_id = Column(Integer, ForeignKey("professionals.id", ondelete="CASCADE"), nullable=False, index=True)
     service_id = Column(Integer, ForeignKey("professional_services.id"), nullable=False, index=True)
     appointment_date = Column(Date, nullable=False)
     start_time = Column(Time, nullable=False)

@@ -49,6 +49,7 @@ def _date_to_str(d: date) -> str:
 
 class AvailabilityService:
     def __init__(self, db: Session):
+        self.db = db
         self.repo = AvailabilityRepository(db)
         self.pro_repo = ProfessionalRepository(db)
 
@@ -181,7 +182,6 @@ class AvailabilityService:
         professional_id: int,
         date_str: str,
         service_id: int,
-        db,
     ) -> List[str]:
         """Return list of available start times 'HH:MM' for the given professional/date/service."""
         from app.repositories.service_repository import ServiceRepository
@@ -190,7 +190,7 @@ class AvailabilityService:
         if not professional:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profissional não encontrado")
 
-        service_repo = ServiceRepository(db)
+        service_repo = ServiceRepository(self.db)
         service = service_repo.get_by_id(service_id)
         if not service or not service.is_active or service.professional_id != professional_id:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Serviço não encontrado")
@@ -211,7 +211,7 @@ class AvailabilityService:
         duration = timedelta(minutes=int(service.duration_minutes))
         slot_step = timedelta(minutes=30)
 
-        appt_repo = AppointmentRepository(db)
+        appt_repo = AppointmentRepository(self.db)
 
         slots: List[str] = []
         current = datetime.combine(date_val, avail.start_time)

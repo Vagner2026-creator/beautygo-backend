@@ -37,9 +37,8 @@ class NotificationRepository:
 
     def mark_all_read(self, user_id: int) -> None:
         now = datetime.now(timezone.utc)
-        (
-            self.db.query(Notification)
-            .filter(Notification.user_id == user_id, Notification.read_at == None)
-            .update({"read_at": now})
-        )
+        self.db.query(Notification).filter(
+            Notification.user_id == user_id,
+            Notification.read_at.is_(None),
+        ).update({"read_at": now}, synchronize_session=False)
         self.db.commit()

@@ -31,7 +31,7 @@ async def get_available_slots(
     service_id: int = Query(..., description="ID do serviço"),
     db: Session = Depends(get_db),
 ):
-    return AvailabilityService(db).get_available_slots(professional_id, date, service_id, db)
+    return AvailabilityService(db).get_available_slots(professional_id, date, service_id)
 
 
 @router.post("/", response_model=AvailabilityResponse, status_code=201)

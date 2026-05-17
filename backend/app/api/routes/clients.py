@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
@@ -29,7 +29,6 @@ async def get_my_client_profile(
     repo = ClientRepository(db)
     client = repo.get_by_user_id(current_user.id)
     if not client:
-        from fastapi import HTTPException, status
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Perfil não encontrado")
     return client
 
@@ -43,7 +42,6 @@ async def update_my_client_profile(
     repo = ClientRepository(db)
     client = repo.get_by_user_id(current_user.id)
     if not client:
-        from fastapi import HTTPException, status
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Perfil não encontrado")
     for field, value in data.model_dump(exclude_none=True).items():
         setattr(client, field, value)

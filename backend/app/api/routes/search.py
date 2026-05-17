@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
@@ -74,12 +74,6 @@ async def search_nearby(
     size: int = 20,
     db: Session = Depends(get_db),
 ):
-    if lat is None or lng is None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Parâmetros 'lat' e 'lng' são obrigatórios para busca por proximidade",
-        )
-
     filters = SearchFilters(
         category_id=category_id,
         max_distance_km=max_distance_km,

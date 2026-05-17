@@ -1,6 +1,6 @@
 from typing import Optional, List, Tuple
 from datetime import date, time
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.models.appointment import Appointment, AppointmentStatus
 
 
@@ -15,7 +15,15 @@ class AppointmentRepository:
         return obj
 
     def get_by_id(self, appointment_id: int) -> Optional[Appointment]:
-        return self.db.query(Appointment).filter(Appointment.id == appointment_id).first()
+        return (
+            self.db.query(Appointment)
+            .options(
+                joinedload(Appointment.client),
+                joinedload(Appointment.professional),
+            )
+            .filter(Appointment.id == appointment_id)
+            .first()
+        )
 
     def update(self, obj: Appointment) -> Appointment:
         self.db.commit()
