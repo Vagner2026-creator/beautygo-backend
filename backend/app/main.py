@@ -1,7 +1,9 @@
+import os
 import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
@@ -9,6 +11,7 @@ from app.core.config import settings
 from app.core.middleware import SecurityHeadersMiddleware, AuditMiddleware
 from app.core.limiter import limiter
 from app.api.routes import auth, users, clients, professionals, locations, admin
+from app.api.routes import categories, services, media, reviews, favorites, search
 
 if settings.SENTRY_DSN:
     sentry_sdk.init(dsn=settings.SENTRY_DSN, traces_sample_rate=0.1)
@@ -41,6 +44,16 @@ app.include_router(clients.router, prefix="/api/v1/clients", tags=["Clientes"])
 app.include_router(professionals.router, prefix="/api/v1/professionals", tags=["Profissionais"])
 app.include_router(locations.router, prefix="/api/v1/locations", tags=["Localização"])
 app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
+app.include_router(categories.router, prefix="/api/v1/categories", tags=["Categorias"])
+app.include_router(services.router, prefix="/api/v1/services", tags=["Serviços"])
+app.include_router(media.router, prefix="/api/v1/media", tags=["Galeria"])
+app.include_router(reviews.router, prefix="/api/v1/reviews", tags=["Avaliações"])
+app.include_router(favorites.router, prefix="/api/v1/favorites", tags=["Favoritos"])
+app.include_router(search.router, prefix="/api/v1/search", tags=["Busca"])
+
+# Serve uploaded files
+os.makedirs("uploads", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 
 @app.get("/health", tags=["Health"])

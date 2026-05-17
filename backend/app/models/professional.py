@@ -20,6 +20,11 @@ class Professional(Base):
     address = Column(Text, nullable=True)
     city_id = Column(Integer, ForeignKey("cities.id"), nullable=True)
     profile_image_url = Column(String(500), nullable=True)
+    latitude = Column(Numeric(10, 7), nullable=True)
+    longitude = Column(Numeric(10, 7), nullable=True)
+    neighborhood = Column(String(255), nullable=True)
+    home_service = Column(Boolean, default=False)
+    salon_service = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 

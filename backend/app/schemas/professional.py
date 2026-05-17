@@ -22,6 +22,11 @@ class ProfessionalUpdate(BaseModel):
     city_id: Optional[int] = None
     is_available: Optional[bool] = None
     profile_image_url: Optional[str] = None
+    latitude: Optional[Decimal] = None
+    longitude: Optional[Decimal] = None
+    neighborhood: Optional[str] = None
+    home_service: Optional[bool] = None
+    salon_service: Optional[bool] = None
 
 
 class ProfessionalResponse(BaseModel):
@@ -37,5 +42,10 @@ class ProfessionalResponse(BaseModel):
     address: Optional[str]
     city_id: Optional[int]
     profile_image_url: Optional[str]
+    latitude: Optional[Decimal] = None
+    longitude: Optional[Decimal] = None
+    neighborhood: Optional[str] = None
+    home_service: Optional[bool] = False
+    salon_service: Optional[bool] = True
 
     model_config = {"from_attributes": True}
