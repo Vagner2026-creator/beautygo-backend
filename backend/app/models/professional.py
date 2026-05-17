@@ -25,6 +25,7 @@ class Professional(Base):
     neighborhood = Column(String(255), nullable=True)
     home_service = Column(Boolean, default=False)
     salon_service = Column(Boolean, default=True)
+    is_verified = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 

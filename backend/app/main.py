@@ -12,6 +12,7 @@ from app.core.middleware import SecurityHeadersMiddleware, AuditMiddleware
 from app.core.limiter import limiter
 from app.api.routes import auth, users, clients, professionals, locations, admin
 from app.api.routes import categories, services, media, reviews, favorites, search
+from app.api.routes import appointments, availability, notifications
 
 if settings.SENTRY_DSN:
     sentry_sdk.init(dsn=settings.SENTRY_DSN, traces_sample_rate=0.1)
@@ -50,6 +51,9 @@ app.include_router(media.router, prefix="/api/v1/media", tags=["Galeria"])
 app.include_router(reviews.router, prefix="/api/v1/reviews", tags=["Avaliações"])
 app.include_router(favorites.router, prefix="/api/v1/favorites", tags=["Favoritos"])
 app.include_router(search.router, prefix="/api/v1/search", tags=["Busca"])
+app.include_router(appointments.router, prefix="/api/v1/appointments", tags=["Agendamentos"])
+app.include_router(availability.router, prefix="/api/v1/availability", tags=["Disponibilidade"])
+app.include_router(notifications.router, prefix="/api/v1/notifications", tags=["Notificações"])
 
 # Serve uploaded files
 os.makedirs("uploads", exist_ok=True)

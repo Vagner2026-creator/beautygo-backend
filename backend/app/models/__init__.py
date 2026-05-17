@@ -10,6 +10,11 @@ from app.models.professional_media import ProfessionalMedia
 from app.models.review import Review
 from app.models.favorite import Favorite
 from app.models.search_log import SearchLog
+from app.models.availability import Availability
+from app.models.blocked_date import BlockedDate
+from app.models.appointment import Appointment, AppointmentStatus
+from app.models.notification import Notification
+from app.models.admin_log import AdminLog
 
 __all__ = [
     "User",
@@ -24,4 +29,10 @@ __all__ = [
     "Review",
     "Favorite",
     "SearchLog",
+    "Availability",
+    "BlockedDate",
+    "Appointment",
+    "AppointmentStatus",
+    "Notification",
+    "AdminLog",
 ]

@@ -2,14 +2,21 @@
 
 Marketplace de serviços de beleza — conecta clientes a profissionais (salões, manicures, cabeleireiros, etc.).
 
-## Tecnologias
+## Stack Tecnológico
 
-- **Python 3.12** + **FastAPI 0.111**
-- **PostgreSQL 16** via SQLAlchemy 2.0 + Alembic
-- **Redis 7** para cache e rate limiting
-- **JWT** (python-jose) para autenticação
-- **Docker Compose** para orquestração local
-- **Prometheus + Grafana** para observabilidade
+| Camada | Tecnologia |
+|---|---|
+| Linguagem | Python 3.12 |
+| Framework | FastAPI 0.111 |
+| ORM | SQLAlchemy 2.0 |
+| Migrations | Alembic |
+| Banco de Dados | PostgreSQL 16 |
+| Cache / Rate Limit | Redis 7 |
+| Autenticação | JWT (python-jose) + bcrypt |
+| Validação | Pydantic v2 |
+| Monitoramento | Prometheus + Grafana |
+| Error Tracking | Sentry (opcional) |
+| Orquestração | Docker Compose |
 
 ---
 
@@ -20,41 +27,42 @@ Marketplace de serviços de beleza — conecta clientes a profissionais (salões
 
 ---
 
-## Subindo com Docker Compose
+## Como Rodar com Docker
 
 ```bash
-# Copie e edite as variáveis de ambiente
+# 1. Copie e edite as variáveis de ambiente
 cp .env.example .env
 
-# Suba todos os serviços
+# 2. Suba todos os serviços (API, PostgreSQL, Redis, Prometheus, Grafana)
 docker compose up --build
 
-# A API estará disponível em:
-# http://localhost:8000
-# Docs (apenas DEBUG=true): http://localhost:8000/docs
+# 3. A API estará disponível em:
+#    http://localhost:8000
+#    Docs (apenas DEBUG=true): http://localhost:8000/docs
+#    Redoc (apenas DEBUG=true): http://localhost:8000/redoc
 ```
 
 ---
 
-## Desenvolvimento local (sem Docker)
+## Como Rodar Localmente
 
 ```bash
-# Crie e ative o ambiente virtual
+# 1. Crie e ative o ambiente virtual
 python -m venv .venv
 source .venv/bin/activate        # Linux/macOS
 .venv\Scripts\activate           # Windows
 
-# Instale as dependências
+# 2. Instale as dependências
 pip install -r requirements.txt
 
-# Configure as variáveis de ambiente
+# 3. Configure as variáveis de ambiente
 cp .env.example .env
 # Edite .env com suas credenciais locais
 
-# Execute as migrações
+# 4. Execute as migrações
 alembic upgrade head
 
-# Suba a API com reload
+# 5. Suba a API com reload automático
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -66,15 +74,17 @@ uvicorn app.main:app --reload --port 8000
 |---|---|---|
 | `DATABASE_URL` | URL de conexão PostgreSQL | obrigatório |
 | `REDIS_URL` | URL de conexão Redis | `redis://localhost:6379/0` |
-| `SECRET_KEY` | Chave secreta JWT (min 32 chars) | obrigatório |
+| `SECRET_KEY` | Chave secreta JWT (mínimo 32 caracteres) | obrigatório |
 | `ALGORITHM` | Algoritmo JWT | `HS256` |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | Expiração do access token | `30` |
-| `REFRESH_TOKEN_EXPIRE_DAYS` | Expiração do refresh token | `7` |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Expiração do access token (minutos) | `30` |
+| `REFRESH_TOKEN_EXPIRE_DAYS` | Expiração do refresh token (dias) | `7` |
 | `DEBUG` | Habilita /docs e /redoc | `false` |
 | `ENVIRONMENT` | Ambiente (development/production) | `development` |
+| `APP_NAME` | Nome da aplicação | `BeautyGO API` |
+| `APP_VERSION` | Versão da aplicação | `1.0.0` |
 | `CORS_ORIGINS` | Origens permitidas (vírgula separado) | `http://localhost:3000` |
 | `SENTRY_DSN` | DSN do Sentry (opcional) | vazio |
-| `RATE_LIMIT_PER_MINUTE` | Limite de requisições por minuto | `60` |
+| `RATE_LIMIT_PER_MINUTE` | Limite de requisições por minuto por IP | `60` |
 
 ---
 
@@ -90,7 +100,7 @@ alembic upgrade head
 # Reverter a última migration
 alembic downgrade -1
 
-# Ver histórico
+# Ver histórico de migrations
 alembic history
 ```
 
@@ -144,11 +154,95 @@ alembic history
 | GET | `/cities/search?name=` | Buscar cidades por nome | Não |
 | GET | `/cities/{city_id}` | Buscar cidade por ID | Não |
 
+### Categorias (`/api/v1/categories`)
+
+| Método | Endpoint | Descrição | Auth |
+|---|---|---|---|
+| GET | `/` | Listar categorias | Não |
+| POST | `/` | Criar categoria | Admin |
+| PATCH | `/{id}` | Atualizar categoria | Admin |
+| DELETE | `/{id}` | Deletar categoria | Admin |
+
+### Serviços (`/api/v1/services`)
+
+| Método | Endpoint | Descrição | Auth |
+|---|---|---|---|
+| GET | `/professionals/{id}/services` | Listar serviços de um profissional | Não |
+| POST | `/` | Criar serviço | Profissional |
+| PATCH | `/{service_id}` | Atualizar serviço | Profissional |
+| DELETE | `/{service_id}` | Deletar serviço | Profissional |
+
+### Agendamentos (`/api/v1/appointments`)
+
+| Método | Endpoint | Descrição | Auth |
+|---|---|---|---|
+| POST | `/` | Criar agendamento | Cliente |
+| GET | `/client` | Listar agendamentos do cliente | Cliente |
+| GET | `/professional` | Listar agendamentos do profissional | Profissional |
+| GET | `/{appointment_id}` | Detalhes do agendamento | Cliente ou Profissional |
+| PATCH | `/{appointment_id}/confirm` | Confirmar agendamento | Profissional |
+| PATCH | `/{appointment_id}/cancel` | Cancelar agendamento | Cliente ou Profissional |
+| PATCH | `/{appointment_id}/reschedule` | Reagendar | Cliente |
+
+### Disponibilidade (`/api/v1/availability`)
+
+| Método | Endpoint | Descrição | Auth |
+|---|---|---|---|
+| GET | `/professional/{id}` | Ver disponibilidade do profissional | Não |
+| GET | `/professional/{id}/slots?date=&service_id=` | Slots disponíveis para agendamento | Não |
+| POST | `/` | Criar disponibilidade semanal | Profissional |
+| PATCH | `/{availability_id}` | Atualizar disponibilidade | Profissional |
+| DELETE | `/{availability_id}` | Deletar disponibilidade | Profissional |
+| POST | `/block-date` | Bloquear data específica | Profissional |
+| DELETE | `/block-date/{blocked_id}` | Desbloquear data | Profissional |
+
+### Notificações (`/api/v1/notifications`)
+
+| Método | Endpoint | Descrição | Auth |
+|---|---|---|---|
+| GET | `/` | Listar notificações | Sim |
+| PATCH | `/{notification_id}/read` | Marcar notificação como lida | Sim |
+| PATCH | `/read-all` | Marcar todas como lidas | Sim |
+
+### Galeria (`/api/v1/media`)
+
+| Método | Endpoint | Descrição | Auth |
+|---|---|---|---|
+| POST | `/` | Upload de imagem | Profissional |
+| GET | `/professionals/{id}/media` | Listar galeria do profissional | Não |
+| DELETE | `/{media_id}` | Deletar imagem | Profissional |
+
+### Avaliações (`/api/v1/reviews`)
+
+| Método | Endpoint | Descrição | Auth |
+|---|---|---|---|
+| GET | `/professionals/{id}/reviews` | Listar avaliações do profissional | Não |
+| POST | `/` | Criar avaliação | Cliente |
+
+### Favoritos (`/api/v1/favorites`)
+
+| Método | Endpoint | Descrição | Auth |
+|---|---|---|---|
+| GET | `/` | Listar favoritos | Cliente |
+| POST | `/` | Adicionar favorito | Cliente |
+| DELETE | `/{professional_id}` | Remover favorito | Cliente |
+
+### Busca (`/api/v1/search`)
+
+| Método | Endpoint | Descrição | Auth |
+|---|---|---|---|
+| GET | `/` | Buscar profissionais (filtros avançados) | Não |
+
 ### Admin (`/api/v1/admin`)
 
 | Método | Endpoint | Descrição | Auth |
 |---|---|---|---|
-| GET | `/stats` | Estatísticas gerais da plataforma | Admin |
+| GET | `/stats` | Estatísticas gerais | Admin |
+| GET | `/users` | Listar todos os usuários | Admin |
+| GET | `/professionals` | Listar profissionais | Admin |
+| PATCH | `/professionals/{id}/verify` | Verificar profissional | Admin |
+| PATCH | `/users/{id}/block` | Bloquear usuário | Admin |
+| GET | `/reports` | Relatório de agendamentos | Admin |
 
 ### Health Check
 
@@ -193,34 +287,61 @@ Os testes usam SQLite em memória — não é necessário PostgreSQL rodando.
 backend/
 ├── app/
 │   ├── api/
-│   │   └── routes/          # Endpoints FastAPI
+│   │   └── routes/              # Endpoints FastAPI
 │   │       ├── auth.py
 │   │       ├── users.py
 │   │       ├── clients.py
 │   │       ├── professionals.py
 │   │       ├── locations.py
-│   │       └── admin.py
-│   ├── core/                # Configurações centrais
-│   │   ├── config.py        # Settings via pydantic-settings
-│   │   ├── database.py      # Engine SQLAlchemy + Base
-│   │   ├── dependencies.py  # Injeção de dependências FastAPI
-│   │   ├── limiter.py       # Rate limiting (slowapi)
-│   │   ├── middleware.py    # Security headers + Audit log
-│   │   ├── security.py      # JWT + bcrypt
-│   │   └── utils.py         # CPF, slug, telefone
-│   ├── models/              # Modelos SQLAlchemy
-│   ├── repositories/        # Camada de acesso ao banco
-│   ├── schemas/             # Schemas Pydantic (request/response)
-│   ├── services/            # Regras de negócio
-│   ├── middlewares/         # Middlewares extras
-│   ├── tests/               # Testes automatizados
-│   └── main.py              # Ponto de entrada FastAPI
-├── alembic/                 # Migrações de banco
+│   │       ├── admin.py
+│   │       ├── categories.py
+│   │       ├── services.py
+│   │       ├── media.py
+│   │       ├── reviews.py
+│   │       ├── favorites.py
+│   │       ├── search.py
+│   │       ├── appointments.py  # Etapa 3
+│   │       ├── availability.py  # Etapa 3
+│   │       └── notifications.py # Etapa 3
+│   ├── core/                    # Configurações centrais
+│   │   ├── config.py            # Settings via pydantic-settings
+│   │   ├── database.py          # Engine SQLAlchemy + Base
+│   │   ├── dependencies.py      # Injeção de dependências FastAPI
+│   │   ├── limiter.py           # Rate limiting (slowapi)
+│   │   ├── middleware.py        # Security headers + Audit log
+│   │   ├── security.py          # JWT + bcrypt
+│   │   └── utils.py             # CPF, slug, telefone
+│   ├── models/                  # Modelos SQLAlchemy
+│   │   ├── user.py
+│   │   ├── client.py
+│   │   ├── professional.py      # + campo is_verified (Etapa 3)
+│   │   ├── city.py / state.py
+│   │   ├── audit_log.py
+│   │   ├── category.py
+│   │   ├── professional_service.py
+│   │   ├── professional_media.py
+│   │   ├── review.py
+│   │   ├── favorite.py
+│   │   ├── search_log.py
+│   │   ├── availability.py      # Etapa 3
+│   │   ├── blocked_date.py      # Etapa 3
+│   │   ├── appointment.py       # Etapa 3
+│   │   ├── notification.py      # Etapa 3
+│   │   └── admin_log.py         # Etapa 3
+│   ├── repositories/            # Camada de acesso ao banco
+│   ├── schemas/                 # Schemas Pydantic (request/response)
+│   ├── services/                # Regras de negócio
+│   ├── middlewares/             # Middlewares extras
+│   ├── tests/                   # Testes automatizados
+│   └── main.py                  # Ponto de entrada FastAPI
+├── alembic/                     # Migrações de banco
 ├── alembic.ini
 ├── docker-compose.yml
 ├── Dockerfile
 ├── prometheus.yml
 ├── requirements.txt
+├── README.md
+├── DEPLOY.md
 └── .env.example
 ```
 
@@ -244,3 +365,36 @@ backend/
 - Security headers em todas as respostas
 - CORS configurável por variável de ambiente
 - Validação de CPF no cadastro de clientes
+
+---
+
+## Checklist de Funcionalidades
+
+### Etapa 1 — Base
+- [x] Autenticação (registro, login, refresh, troca de senha)
+- [x] CRUD de usuários
+- [x] Perfis de cliente e profissional
+- [x] Localização (estados e cidades)
+- [x] Painel admin básico (stats)
+- [x] Rate limiting, CORS, security headers
+- [x] Audit log de requisições
+- [x] Sentry para error tracking
+- [x] Docker Compose completo
+
+### Etapa 2 — Marketplace
+- [x] Categorias de serviços
+- [x] Serviços do profissional (CRUD)
+- [x] Galeria de fotos (upload/delete)
+- [x] Avaliações e rating médio
+- [x] Favoritos
+- [x] Busca avançada com filtros e geolocalização
+
+### Etapa 3 — Agendamentos
+- [x] Disponibilidade semanal do profissional
+- [x] Bloqueio de datas específicas
+- [x] Slots disponíveis por data e serviço
+- [x] Agendamentos (criar, confirmar, cancelar, reagendar)
+- [x] Notificações internas (novo agendamento, confirmação, cancelamento)
+- [x] Painel admin expandido (listar usuários, verificar profissional, bloquear usuário, relatórios)
+- [x] Campo is_verified no profissional
+- [x] Log de ações administrativas (admin_log)
