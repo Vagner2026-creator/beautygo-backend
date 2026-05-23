@@ -11,6 +11,9 @@ class LocationRepository:
     def list_states(self) -> List[State]:
         return self.db.query(State).order_by(State.name).all()
 
+    def get_state_by_id(self, state_id: int) -> Optional[State]:
+        return self.db.query(State).filter(State.id == state_id).first()
+
     def get_state_by_uf(self, uf: str) -> Optional[State]:
         return self.db.query(State).filter(State.uf == uf.upper()).first()
 

@@ -14,6 +14,9 @@ class LocationService:
         return self.repo.list_states()
 
     def list_cities(self, state_id: int) -> List[City]:
+        state = self.repo.get_state_by_id(state_id)
+        if not state:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Estado não encontrado")
         return self.repo.list_cities_by_state(state_id)
 
     def get_city(self, city_id: int) -> City:

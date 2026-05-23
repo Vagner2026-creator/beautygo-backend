@@ -39,6 +39,7 @@ class ProfessionalResponse(BaseModel):
     rating: Decimal
     rating_count: int
     is_available: bool
+    is_verified: bool
     address: Optional[str]
     city_id: Optional[int]
     profile_image_url: Optional[str]

@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import List
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
@@ -58,7 +59,7 @@ class ReviewService:
 
         # Recalculate and update professional rating
         avg, count = self.repo.get_average_rating(data.professional_id)
-        professional.rating = round(avg, 2)
+        professional.rating = Decimal(str(round(avg, 2)))
         professional.rating_count = count
         self.pro_repo.update(professional)
 

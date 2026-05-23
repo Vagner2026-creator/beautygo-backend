@@ -3,7 +3,12 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 from alembic import context
 from app.core.database import Base
-from app.models import user, client, professional, state, city, audit_log  # noqa: F401
+from app.models import (  # noqa: F401
+    user, client, professional, state, city, audit_log,
+    category, professional_service, professional_media,
+    review, favorite, search_log, availability, blocked_date,
+    appointment, notification, admin_log,
+)
 
 config = context.config
 if config.config_file_name is not None:

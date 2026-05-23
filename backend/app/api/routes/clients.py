@@ -17,6 +17,8 @@ async def create_client_profile(
     db: Session = Depends(get_db),
 ):
     repo = ClientRepository(db)
+    if repo.get_by_user_id(current_user.id):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Perfil de cliente já existe")
     client = Client(user_id=current_user.id, **data.model_dump())
     return repo.create(client)
 

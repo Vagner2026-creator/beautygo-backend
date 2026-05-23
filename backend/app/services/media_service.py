@@ -94,6 +94,11 @@ class MediaService:
         # Try to remove file from disk
         if media.file_url:
             relative_path = media.file_url.lstrip("/")
+            if not relative_path.startswith("uploads/"):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Caminho de arquivo inválido",
+                )
             if os.path.exists(relative_path):
                 try:
                     os.remove(relative_path)
