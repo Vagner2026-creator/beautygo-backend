@@ -81,6 +81,47 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> updateProfile({String? fullName, String? phone}) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      final body = <String, dynamic>{};
+      if (fullName != null) body['full_name'] = fullName;
+      body['phone'] = phone;
+      final response = await _api.patch('/users/me', data: body);
+      _user = UserModel.fromJson(response.data);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = _parseError(e);
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> changePassword({required String current, required String newPass}) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      await _api.post('/auth/change-password', data: {
+        'current_password': current,
+        'new_password': newPass,
+      });
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = _parseError(e);
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('access_token');
