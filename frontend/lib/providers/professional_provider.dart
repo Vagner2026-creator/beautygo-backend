@@ -1,4 +1,6 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../core/api/api_client.dart';
 import '../models/professional_model.dart';
 import '../models/service_model.dart';
@@ -66,6 +68,25 @@ class ProfessionalProvider extends ChangeNotifier {
       return items.map((j) => ServiceModel.fromJson(j)).toList();
     } catch (_) {
       return [];
+    }
+  }
+
+  Future<String?> uploadProfileImage() async {
+    try {
+      final picker = ImagePicker();
+      final file = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+      if (file == null) return null;
+
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(file.path, filename: file.name),
+      });
+      final uploadResp = await _api.post('/media/upload', data: formData);
+      final fileUrl = uploadResp.data['file_url'] as String;
+
+      await _api.patch('/professionals/me', data: {'profile_image_url': fileUrl});
+      return fileUrl;
+    } catch (_) {
+      return null;
     }
   }
 

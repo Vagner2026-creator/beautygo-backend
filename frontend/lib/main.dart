@@ -4,9 +4,11 @@ import 'package:provider/provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/auth_provider.dart';
+import 'providers/category_provider.dart';
 import 'providers/professional_provider.dart';
 import 'providers/appointment_provider.dart';
 import 'providers/notification_provider.dart';
+import 'providers/review_provider.dart';
 import 'features/auth/screens/login_screen.dart';
 import 'features/home/screens/main_shell.dart';
 
@@ -28,9 +30,11 @@ class BeautyGoApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => CategoryProvider()),
         ChangeNotifierProvider(create: (_) => ProfessionalProvider()),
         ChangeNotifierProvider(create: (_) => AppointmentProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider(create: (_) => ReviewProvider()),
       ],
       child: MaterialApp(
         title: 'BeautyGO',
