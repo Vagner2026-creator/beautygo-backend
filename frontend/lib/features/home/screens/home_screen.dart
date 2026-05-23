@@ -4,6 +4,7 @@ import 'package:shimmer/shimmer.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/category_provider.dart';
+import '../../../providers/location_provider.dart';
 import '../../../providers/professional_provider.dart';
 import '../../../providers/notification_provider.dart';
 import '../../../models/category_model.dart';
@@ -20,6 +21,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0; // 0 = "Todos", 1+ = categories[index-1]
+  bool _nearbyActive = false;
+  static const double _nearbyDistanceKm = 10.0;
 
   @override
   void initState() {
@@ -34,7 +37,44 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onCategoryTap(int index, List<CategoryModel> categories) {
     setState(() => _selectedIndex = index);
     final categoryId = index == 0 ? null : categories[index - 1].id;
-    context.read<ProfessionalProvider>().search(categoryId: categoryId);
+    final locProvider = context.read<LocationProvider>();
+    context.read<ProfessionalProvider>().search(
+          categoryId: categoryId,
+          lat: _nearbyActive ? locProvider.lat : null,
+          lng: _nearbyActive ? locProvider.lng : null,
+          maxDistanceKm: _nearbyActive ? _nearbyDistanceKm : null,
+        );
+  }
+
+  Future<void> _toggleNearby() async {
+    final locProvider = context.read<LocationProvider>();
+    final proProvider = context.read<ProfessionalProvider>();
+
+    if (_nearbyActive) {
+      setState(() => _nearbyActive = false);
+      proProvider.search();
+      return;
+    }
+
+    final ok = await locProvider.requestLocation();
+    if (!mounted) return;
+
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(locProvider.error ?? 'Não foi possível obter localização'),
+          backgroundColor: AppTheme.error,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _nearbyActive = true);
+    proProvider.search(
+      lat: locProvider.lat,
+      lng: locProvider.lng,
+      maxDistanceKm: _nearbyDistanceKm,
+    );
   }
 
   static IconData _iconFromString(String? name) {
@@ -66,6 +106,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final catProvider = context.watch<CategoryProvider>();
+    final locProvider = context.watch<LocationProvider>();
     final proProvider = context.watch<ProfessionalProvider>();
     final notifProvider = context.watch<NotificationProvider>();
     final firstName = auth.user?.fullName.split(' ').first ?? '';
@@ -179,6 +220,71 @@ class _HomeScreenState extends State<HomeScreen> {
                           'Buscar serviço ou profissional...',
                           style: TextStyle(color: AppTheme.textSecondary),
                         ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // Nearby toggle
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                child: GestureDetector(
+                  onTap: locProvider.isLoading ? null : _toggleNearby,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: _nearbyActive
+                          ? AppTheme.primary.withOpacity(0.1)
+                          : Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _nearbyActive ? AppTheme.primary : AppTheme.divider,
+                        width: _nearbyActive ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        locProvider.isLoading
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppTheme.primary,
+                                ),
+                              )
+                            : Icon(
+                                _nearbyActive
+                                    ? Icons.location_on
+                                    : Icons.location_on_outlined,
+                                size: 18,
+                                color: _nearbyActive
+                                    ? AppTheme.primary
+                                    : AppTheme.textSecondary,
+                              ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _nearbyActive
+                              ? 'Perto de mim · ${_nearbyDistanceKm.toInt()} km'
+                              : 'Próximos a mim',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: _nearbyActive
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                            color: _nearbyActive
+                                ? AppTheme.primary
+                                : AppTheme.textSecondary,
+                          ),
+                        ),
+                        if (_nearbyActive) ...[
+                          const Spacer(),
+                          const Icon(Icons.close, size: 16, color: AppTheme.primary),
+                        ],
                       ],
                     ),
                   ),
